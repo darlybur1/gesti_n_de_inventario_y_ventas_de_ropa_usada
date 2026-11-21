@@ -1,0 +1,19 @@
+{
+  "name": "Gestión Ropa Usada y Tandas",
+  "short_name": "Ropa Usada",
+  "description": "Inventario, clientes, ventas por tandas y envíos",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F8FAFC",
+  "theme_color": "#4F46E5",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/892/892458.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
