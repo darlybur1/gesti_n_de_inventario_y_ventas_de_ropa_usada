@@ -1,0 +1,2271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Ropa & Estilo - Gestión de Inventario y Ventas</title>
+
+  <!-- PWA Theme Color -->
+  <meta name="theme-color" content="#4F46E5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#EEF2FF',
+              100: '#E0E7FF',
+              500: '#6366F1',
+              600: '#4F46E5',
+              700: '#4338CA',
+              900: '#312E81',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #F8FAFC;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .safe-bottom-padding {
+      padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+    }
+    .card-shadow {
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+    }
+    .active-scale {
+      transition: transform 0.15s ease;
+    }
+    .active-scale:active {
+      transform: scale(0.97);
+    }
+  </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col selection:bg-brand-500 selection:text-white">
+
+  <!-- HEADER / APP BAR -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 py-3 shadow-xs">
+    <div class="max-w-md mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+          <i class="fa-solid fa-shirt"></i>
+        </div>
+        <div>
+          <h1 class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Moda Circular</h1>
+          <p id="appHeaderTitle" class="text-sm font-extrabold text-slate-900 leading-tight">Ropa & Estilo Popayán</p>
+        </div>
+      </div>
+
+      <!-- Role Selector Dropdown -->
+      <div class="relative">
+        <label for="roleSelector" class="sr-only">Seleccionar Perfil</label>
+        <div class="flex items-center gap-1 bg-slate-100 hover:bg-slate-200/80 text-slate-700 px-2.5 py-1.5 rounded-xl text-xs font-semibold border border-slate-200 transition-colors">
+          <i class="fa-solid fa-user-shield text-brand-600"></i>
+          <select id="roleSelector" onchange="changeRole(this.value)" class="bg-transparent font-bold text-slate-800 focus:outline-none cursor-pointer pr-1">
+            <option value="Administrador">Admin</option>
+            <option value="Colaborador Ventas">Ventas</option>
+            <option value="Colaborador Envíos">Envíos</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER (Mobile Centered View) -->
+  <main class="flex-1 max-w-md w-full mx-auto p-4 safe-bottom-padding">
+
+    <!-- VIEW 1: DASHBOARD / INICIO -->
+    <section id="viewDashboard" class="space-y-5">
+      
+      <!-- Greeting Banner with mandatory bracket format -->
+      <div class="bg-gradient-to-r from-slate-900 via-brand-900 to-indigo-900 text-white p-5 rounded-2xl shadow-lg relative overflow-hidden">
+        <div class="absolute -right-4 -bottom-6 opacity-15 text-8xl text-white pointer-events-none">
+          <i class="fa-solid fa-bag-shopping"></i>
+        </div>
+        <div class="flex items-center justify-between mb-1">
+          <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-white/10 backdrop-blur-md text-brand-100 border border-white/10">
+            Rol: <span id="currentRoleBadge" class="font-extrabold text-amber-300">Administrador</span>
+          </span>
+          <span class="text-[10px] text-slate-300"><i class="fa-solid fa-location-dot mr-1"></i>Colombia (COP $)</span>
+        </div>
+        <h2 id="dashboardGreeting" class="text-xl font-black tracking-tight text-white leading-snug mt-1">
+          Bienvenido, [Ropa & Estilo Popayán]
+        </h2>
+        <p class="text-xs text-slate-300 mt-1">Gestión rápida de prendas, tandas de WhatsApp y despachos.</p>
+      </div>
+
+      <!-- Quick Shortcuts 2x3 Grid -->
+      <div id="shortcutsContainer">
+        <h3 class="text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2.5 flex items-center justify-between">
+          <span>Accesos Directos</span>
+          <span class="text-[10px] font-normal text-slate-400">Toca una opción</span>
+        </h3>
+        <div class="grid grid-cols-2 gap-3" id="shortcutsGrid">
+          <!-- Shortcut 1: Crear Prenda -->
+          <button onclick="navigateTo('viewGarmentForm')" class="shortcut-btn bg-white p-4 rounded-2xl card-shadow border border-slate-100 flex flex-col items-center justify-center text-center active-scale hover:border-brand-300 transition-all">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-brand-600 flex items-center justify-center text-xl mb-2">
+              <i class="fa-solid fa-square-plus"></i>
+            </div>
+            <span class="text-xs font-bold text-slate-800">Crear Prenda</span>
+            <span class="text-[10px] text-slate-400 mt-0.5">Nuevo producto</span>
+          </button>
+
+          <!-- Shortcut 2: Gestionar Clientes -->
+          <button onclick="navigateTo('viewClients')" class="shortcut-btn bg-white p-4 rounded-2xl card-shadow border border-slate-100 flex flex-col items-center justify-center text-center active-scale hover:border-brand-300 transition-all">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mb-2">
+              <i class="fa-solid fa-users"></i>
+            </div>
+            <span class="text-xs font-bold text-slate-800">Gestionar Clientes</span>
+            <span class="text-[10px] text-slate-400 mt-0.5">Directorio & Tallas</span>
+          </button>
+
+          <!-- Shortcut 3: Crear Venta (Tanda) -->
+          <button onclick="navigateTo('viewBatches')" class="shortcut-btn bg-white p-4 rounded-2xl card-shadow border border-slate-100 flex flex-col items-center justify-center text-center active-scale hover:border-brand-300 transition-all">
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl mb-2">
+              <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <span class="text-xs font-bold text-slate-800">Crear Venta (Tanda)</span>
+            <span class="text-[10px] text-slate-400 mt-0.5">Ventas WhatsApp</span>
+          </button>
+
+          <!-- Shortcut 4: Registrar Pago -->
+          <button onclick="navigateTo('viewPaymentForm')" class="shortcut-btn bg-white p-4 rounded-2xl card-shadow border border-slate-100 flex flex-col items-center justify-center text-center active-scale hover:border-brand-300 transition-all">
+            <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl mb-2">
+              <i class="fa-solid fa-file-invoice-dollar"></i>
+            </div>
+            <span class="text-xs font-bold text-slate-800">Registrar Pago</span>
+            <span class="text-[10px] text-slate-400 mt-0.5">Abonos y deudas</span>
+          </button>
+
+          <!-- Shortcut 5: Solicitud de Envío -->
+          <button onclick="navigateTo('viewShippingRequestForm')" class="shortcut-btn bg-white p-4 rounded-2xl card-shadow border border-slate-100 flex flex-col items-center justify-center text-center active-scale hover:border-brand-300 transition-all">
+            <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl mb-2">
+              <i class="fa-solid fa-truck-fast"></i>
+            </div>
+            <span class="text-xs font-bold text-slate-800">Solicitud Envío</span>
+            <span class="text-[10px] text-slate-400 mt-0.5">Programar despacho</span>
+          </button>
+
+          <!-- Shortcut 6: Administración -->
+          <button id="adminShortcutBtn" onclick="navigateTo('viewAdmin')" class="shortcut-btn bg-white p-4 rounded-2xl card-shadow border border-slate-100 flex flex-col items-center justify-center text-center active-scale hover:border-brand-300 transition-all">
+            <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center text-xl mb-2">
+              <i class="fa-solid fa-sliders"></i>
+            </div>
+            <span class="text-xs font-bold text-slate-800">Administración</span>
+            <span class="text-[10px] text-slate-400 mt-0.5">Drive & Empresa</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Pending Shipments Section -->
+      <div>
+        <div class="flex items-center justify-between mb-2.5">
+          <h3 class="text-xs font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-box-archive text-brand-600"></i> Envíos Pendientes
+          </h3>
+          <span id="pendingShippingBadgeCount" class="text-xs bg-brand-100 text-brand-700 px-2 py-0.5 rounded-full font-bold">0</span>
+        </div>
+        <div id="pendingShippingList" class="space-y-3">
+          <!-- Dynamic cards rendered here -->
+        </div>
+      </div>
+
+      <!-- Last 5 Batches Section -->
+      <div id="recentBatchesSection">
+        <div class="flex items-center justify-between mb-2.5">
+          <h3 class="text-xs font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-bullhorn text-amber-500"></i> Últimas 5 Tandas Publicadas
+          </h3>
+          <button onclick="navigateTo('viewBatches')" class="text-xs text-brand-600 font-bold hover:underline">Ver todas</button>
+        </div>
+        <div id="recentBatchesList" class="space-y-2.5">
+          <!-- Dynamic cards rendered here -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- VIEW 2: CLIENTES (CRUD & FILTERS) -->
+    <section id="viewClients" class="space-y-4 hidden">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-extrabold text-slate-900">Directorio de Clientes</h2>
+          <p class="text-xs text-slate-500">Gestión de compradores y tallas</p>
+        </div>
+        <button onclick="openClientModal()" class="bg-brand-600 hover:bg-brand-700 text-white px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm active-scale">
+          <i class="fa-solid fa-user-plus"></i> Nuevo
+        </button>
+      </div>
+
+      <!-- Predictive Search Input -->
+      <div class="relative">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+        <input type="text" id="clientSearchInput" oninput="renderClientsList()" placeholder="Buscar por nombre, apellido o WhatsApp..." class="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-500 card-shadow">
+      </div>
+
+      <!-- Quick Filter Chips -->
+      <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+        <button onclick="setClientFilter('pendingShipping')" class="client-filter-chip bg-brand-600 text-white px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap active-scale shadow-xs">
+          <i class="fa-solid fa-truck-fast text-[10px] mr-1"></i> Más envíos pendientes
+        </button>
+        <button onclick="setClientFilter('mostDebt')" class="client-filter-chip bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap active-scale">
+          <i class="fa-solid fa-circle-exclamation text-rose-500 text-[10px] mr-1"></i> Más deuda
+        </button>
+        <button onclick="setClientFilter('mostBought')" class="client-filter-chip bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap active-scale">
+          <i class="fa-solid fa-bag-shopping text-emerald-500 text-[10px] mr-1"></i> Más prendas compradas
+        </button>
+        <button onclick="setClientFilter('noPurchases')" class="client-filter-chip bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap active-scale">
+          <i class="fa-solid fa-user-slash text-[10px] mr-1"></i> Sin compras
+        </button>
+        <button onclick="setClientFilter('newest')" class="client-filter-chip bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap active-scale">
+          <i class="fa-solid fa-sparkles text-amber-500 text-[10px] mr-1"></i> Clientes nuevos
+        </button>
+      </div>
+
+      <!-- Client Cards List -->
+      <div id="clientsCardsContainer" class="space-y-3">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- VIEW 3: DETALLE DEL CLIENTE -->
+    <section id="viewClientDetail" class="space-y-4 hidden">
+      <button onclick="navigateTo('viewClients')" class="text-xs font-bold text-brand-600 flex items-center gap-1">
+        <i class="fa-solid fa-arrow-left"></i> Volver a Clientes
+      </button>
+
+      <div id="clientDetailCard" class="bg-white rounded-2xl p-4 card-shadow border border-slate-100 space-y-4">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- VIEW 4: CREAR PRENDA CON GENERADOR DE COLLAGE -->
+    <section id="viewGarmentForm" class="space-y-4 hidden">
+      <div class="flex items-center justify-between">
+        <h2 id="garmentFormTitle" class="text-lg font-extrabold text-slate-900">Crear Nueva Prenda</h2>
+        <button onclick="navigateTo('viewGarmentCatalog')" class="text-xs text-brand-600 font-bold flex items-center gap-1">
+          <i class="fa-solid fa-boxes-stacked"></i> Catálogo
+        </button>
+      </div>
+
+      <form id="formGarment" onsubmit="handleSaveGarment(event)" class="bg-white p-4 rounded-2xl card-shadow border border-slate-100 space-y-4">
+        <input type="hidden" id="garmentId">
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nombre de la Prenda *</label>
+          <input type="text" id="garmentName" required placeholder="Ej. Chaqueta Jean Levi's Vintage" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-brand-500 focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Fecha Creación</label>
+            <input type="text" id="garmentCreatedDate" readonly class="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-500 font-medium">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Talla *</label>
+            <input type="text" id="garmentSize" required placeholder="Ej. M, 38, S" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-brand-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Estado Físico *</label>
+            <select id="garmentCondition" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-brand-500 focus:outline-none">
+              <option value="Nueva con etiqueta">Nueva con etiqueta</option>
+              <option value="Nueva sin etiqueta">Nueva sin etiqueta</option>
+              <option value="Usada como nueva" selected>Usada como nueva</option>
+              <option value="Usada con detalles">Usada con detalles</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Precio (COP $) *</label>
+            <input type="number" id="garmentPrice" required min="0" step="500" placeholder="35000" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-brand-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Estado de Venta</label>
+          <select id="garmentSaleStatus" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-brand-500 focus:outline-none">
+            <option value="Pendiente de publicar">Pendiente de publicar</option>
+            <option value="Vendida">Vendida</option>
+            <option value="Pendiente de pago">Pendiente de pago</option>
+            <option value="Enviada">Enviada</option>
+          </select>
+        </div>
+
+        <!-- Camera Capture & Collage Engine -->
+        <div class="border-t border-slate-100 pt-3">
+          <div class="flex items-center justify-between mb-2">
+            <label class="block text-xs font-bold text-slate-700 uppercase">Fotos de la Prenda (Collage 1 a 4 fotos)</label>
+            <span class="text-[10px] text-slate-400">Canvas automático</span>
+          </div>
+
+          <div class="flex items-center gap-2 mb-3">
+            <label class="cursor-pointer bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2 active-scale">
+              <i class="fa-solid fa-camera text-base"></i> Tomar / Seleccionar Fotos
+              <input type="file" id="garmentPhotoInput" accept="image/*" multiple capture="environment" onchange="handlePhotoUpload(event)" class="hidden">
+            </label>
+            <button type="button" onclick="clearGarmentPhotos()" class="text-xs text-rose-500 hover:underline">Limpiar</button>
+          </div>
+
+          <!-- Collage Canvas Preview -->
+          <div class="relative w-full aspect-square max-w-[260px] mx-auto bg-slate-100 rounded-xl overflow-hidden border border-slate-200 flex items-center justify-center">
+            <canvas id="collageCanvas" width="500" height="500" class="w-full h-full object-cover hidden"></canvas>
+            <div id="collagePlaceholder" class="text-center p-4">
+              <i class="fa-solid fa-images text-3xl text-slate-300 mb-1 block"></i>
+              <p class="text-xs text-slate-400">Las fotos capturadas se combinarán en este marco para compartir en WhatsApp.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button type="submit" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl text-xs shadow-md active-scale">
+            <i class="fa-solid fa-floppy-disk mr-1"></i> Guardar Prenda
+          </button>
+          <button type="button" onclick="navigateTo('viewDashboard')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold px-4 py-3 rounded-xl text-xs">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- VIEW 5: CATÁLOGO DE PRENDAS -->
+    <section id="viewGarmentCatalog" class="space-y-4 hidden">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-extrabold text-slate-900">Catálogo de Prendas</h2>
+          <p class="text-xs text-slate-500">Inventario general</p>
+        </div>
+        <button onclick="navigateTo('viewGarmentForm')" class="bg-brand-600 hover:bg-brand-700 text-white px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm active-scale">
+          <i class="fa-solid fa-plus"></i> Nueva
+        </button>
+      </div>
+
+      <!-- Catalog Tabs -->
+      <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar border-b border-slate-200 pb-2">
+        <button onclick="setCatalogFilter('ALL')" class="catalog-tab bg-brand-600 text-white px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap">Todas</button>
+        <button onclick="setCatalogFilter('Pendiente de publicar')" class="catalog-tab bg-white text-slate-600 px-3 py-1 rounded-lg text-xs font-medium border border-slate-200 whitespace-nowrap">Disponibles</button>
+        <button onclick="setCatalogFilter('Pendiente de pago')" class="catalog-tab bg-white text-slate-600 px-3 py-1 rounded-lg text-xs font-medium border border-slate-200 whitespace-nowrap">Por Pagar</button>
+        <button onclick="setCatalogFilter('Vendida')" class="catalog-tab bg-white text-slate-600 px-3 py-1 rounded-lg text-xs font-medium border border-slate-200 whitespace-nowrap">Vendidas</button>
+        <button onclick="setCatalogFilter('Enviada')" class="catalog-tab bg-white text-slate-600 px-3 py-1 rounded-lg text-xs font-medium border border-slate-200 whitespace-nowrap">Enviadas</button>
+      </div>
+
+      <div id="garmentCatalogGrid" class="grid grid-cols-2 gap-3">
+        <!-- Dynamic Garment Cards -->
+      </div>
+    </section>
+
+    <!-- VIEW 6: TANDAS DE VENTAS -->
+    <section id="viewBatches" class="space-y-4 hidden">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-extrabold text-slate-900">Tandas de Ventas</h2>
+          <p class="text-xs text-slate-500">Publicaciones para WhatsApp</p>
+        </div>
+        <button onclick="openCreateBatchModal()" class="bg-brand-600 hover:bg-brand-700 text-white px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm active-scale">
+          <i class="fa-solid fa-folder-plus"></i> Nueva Tanda
+        </button>
+      </div>
+
+      <div id="batchesListContainer" class="space-y-3">
+        <!-- Batches rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- VIEW 7: GESTIÓN DE TANDA EN VIVO -->
+    <section id="viewBatchDetail" class="space-y-4 hidden">
+      <button onclick="navigateTo('viewBatches')" class="text-xs font-bold text-brand-600 flex items-center gap-1">
+        <i class="fa-solid fa-arrow-left"></i> Volver a Tandas
+      </button>
+
+      <div id="batchDetailHeader" class="bg-white rounded-2xl p-4 card-shadow border border-slate-100 space-y-3">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <h3 class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Prendas en esta Tanda</h3>
+      <div id="batchGarmentsList" class="space-y-3">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- VIEW 8: REGISTRAR PAGO -->
+    <section id="viewPaymentForm" class="space-y-4 hidden">
+      <h2 class="text-lg font-extrabold text-slate-900">Registrar Pago de Cliente</h2>
+
+      <form id="formPayment" onsubmit="handleSavePayment(event)" class="bg-white p-4 rounded-2xl card-shadow border border-slate-100 space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Seleccionar Cliente *</label>
+          <input type="text" id="paymentClientSearch" oninput="filterPaymentClients()" placeholder="Escribe para buscar cliente..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-brand-500 focus:outline-none mb-1">
+          <select id="paymentClientId" required onchange="onPaymentClientSelect(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-brand-500 focus:outline-none">
+            <option value="">-- Elige un cliente --</option>
+          </select>
+        </div>
+
+        <!-- Debt summary -->
+        <div id="paymentClientDebtBox" class="hidden bg-rose-50 border border-rose-200 rounded-xl p-3 text-xs text-rose-800">
+          <p class="font-bold">Deuda Pendiente de este Cliente:</p>
+          <p id="paymentClientDebtAmount" class="text-lg font-black text-rose-600">$ 0 COP</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Monto Pagado (COP $) *</label>
+          <input type="number" id="paymentAmount" required min="1" step="500" placeholder="Ej. 45000" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-brand-500 focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Fecha de Pago</label>
+            <input type="date" id="paymentDate" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-brand-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Medio de Pago</label>
+            <select id="paymentMethod" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-brand-500 focus:outline-none">
+              <option value="Transferencia">Transferencia (Nequi / Daviplata / Banco)</option>
+              <option value="Efectivo">Efectivo</option>
+              <option value="Canje">Canje</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="pt-2 flex gap-2">
+          <button type="submit" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-xl text-xs shadow-md active-scale">
+            <i class="fa-solid fa-check mr-1"></i> Guardar Pago
+          </button>
+          <button type="button" onclick="navigateTo('viewDashboard')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold px-4 py-3 rounded-xl text-xs">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- VIEW 9: SOLICITUD DE ENVÍO -->
+    <section id="viewShippingRequestForm" class="space-y-4 hidden">
+      <h2 class="text-lg font-extrabold text-slate-900">Programar Solicitud de Envío</h2>
+
+      <form id="formShippingRequest" onsubmit="handleSaveShippingRequest(event)" class="bg-white p-4 rounded-2xl card-shadow border border-slate-100 space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Cliente con prendas por enviar *</label>
+          <select id="shippingClientId" required onchange="onShippingClientSelect(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-brand-500 focus:outline-none">
+            <option value="">-- Selecciona un cliente --</option>
+          </select>
+        </div>
+
+        <!-- Payment Status Preview & Quick Pay -->
+        <div id="shippingPaymentStatusBox" class="hidden rounded-xl p-3 text-xs border">
+          <!-- Dynamically filled -->
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Fecha Programada de Envío *</label>
+          <input type="date" id="shippingDate" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-brand-500 focus:outline-none">
+        </div>
+
+        <div class="pt-2 flex gap-2">
+          <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-xs shadow-md active-scale">
+            <i class="fa-solid fa-truck-ramp-box mr-1"></i> Programar Envío
+          </button>
+          <button type="button" onclick="navigateTo('viewDashboard')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold px-4 py-3 rounded-xl text-xs">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- VIEW 10: ADMINISTRACIÓN & GOOGLE DRIVE -->
+    <section id="viewAdmin" class="space-y-4 hidden">
+      <div>
+        <h2 class="text-lg font-extrabold text-slate-900">Administración del Negocio</h2>
+        <p class="text-xs text-slate-500">Configuración, perfiles y copia de seguridad</p>
+      </div>
+
+      <!-- Financial KPIs -->
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-white p-4 rounded-2xl card-shadow border border-slate-100">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Prendas Vendidas</span>
+          <div id="kpiTotalSales" class="text-xl font-black text-slate-900 mt-1">0</div>
+          <span class="text-[10px] text-emerald-600 font-bold">Moda circular entregada</span>
+        </div>
+        <div class="bg-white p-4 rounded-2xl card-shadow border border-slate-100">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Deuda Total Activa</span>
+          <div id="kpiTotalDebt" class="text-lg font-black text-rose-600 mt-1">$ 0</div>
+          <span class="text-[10px] text-rose-500 font-bold">Por cobrar a clientes</span>
+        </div>
+      </div>
+
+      <!-- Company Details Form -->
+      <form id="formCompany" onsubmit="handleSaveCompany(event)" class="bg-white p-4 rounded-2xl card-shadow border border-slate-100 space-y-3">
+        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Datos de la Empresa</h3>
+        
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Nombre de la Empresa</label>
+          <input type="text" id="companyName" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Propietario / Admin</label>
+          <input type="text" id="companyOwner" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Dirección de la Empresa</label>
+          <input type="text" id="companyAddress" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Correo Administrador</label>
+          <input type="email" id="companyEmail" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+        </div>
+
+        <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs active-scale">
+          Actualizar Datos Empresa
+        </button>
+      </form>
+
+      <!-- Collaborators Profiles Management -->
+      <div class="bg-white p-4 rounded-2xl card-shadow border border-slate-100 space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Perfiles de Colaboradores</h3>
+          <button onclick="openCollaboratorModal()" class="text-xs bg-brand-50 text-brand-600 font-bold px-2.5 py-1 rounded-lg hover:bg-brand-100">
+            + Agregar
+          </button>
+        </div>
+        <div id="collaboratorsList" class="space-y-2">
+          <!-- Dynamic Collaborators -->
+        </div>
+      </div>
+
+      <!-- Google Drive & Backup Section -->
+      <div class="bg-white p-4 rounded-2xl card-shadow border border-slate-100 space-y-3">
+        <div class="flex items-center gap-2">
+          <i class="fa-brands fa-google-drive text-emerald-600 text-2xl"></i>
+          <div>
+            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Respaldo Google Drive & Local</h3>
+            <p class="text-[10px] text-slate-400">Guarda ropa_usada_db.json en la nube o en tu celular</p>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 mb-1">Google OAuth Client ID (Drive API v3)</label>
+          <input type="text" id="googleClientId" placeholder="ID de cliente de Google Cloud (Opcional)..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+        </div>
+
+        <div class="grid grid-cols-1 gap-2 pt-1">
+          <button onclick="exportBackupJSON()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 active-scale shadow-xs">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Exportar Respaldo (Descargar JSON)
+          </button>
+          
+          <label class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer active-scale text-center border border-slate-200">
+            <i class="fa-solid fa-cloud-arrow-down"></i> Importar / Restaurar desde Google Drive / JSON
+            <input type="file" accept=".json" onchange="importBackupJSON(event)" class="hidden">
+          </label>
+        </div>
+      </div>
+
+      <div class="text-center pt-2">
+        <button onclick="promptResetDemo()" class="text-xs text-rose-500 font-semibold hover:underline">
+          <i class="fa-solid fa-arrow-rotate-left mr-1"></i> Restablecer Datos Iniciales de Demostración
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: CREAR / EDITAR CLIENTE -->
+  <div id="modalClient" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 id="modalClientTitle" class="text-base font-bold text-slate-900">Registrar Cliente</h3>
+        <button onclick="closeClientModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="formClient" onsubmit="handleSaveClient(event)" class="space-y-3">
+        <input type="hidden" id="clientId">
+        
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nombres *</label>
+            <input type="text" id="clientFirstName" required placeholder="Ej. Camila" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Apellidos *</label>
+            <input type="text" id="clientLastName" required placeholder="Ej. Mosquera" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Número WhatsApp *</label>
+          <input type="tel" id="clientWhatsapp" required placeholder="3001234567" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Dirección de Envío (Opcional)</label>
+          <input type="text" id="clientAddress" placeholder="Calle 5 # 12 - 34, Popayán" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block text-[10px] font-semibold text-slate-600 mb-1">Talla Sup.</label>
+            <input type="text" id="clientSizeTop" placeholder="S / M" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-xs text-center">
+          </div>
+          <div>
+            <label class="block text-[10px] font-semibold text-slate-600 mb-1">Talla Inf.</label>
+            <input type="text" id="clientSizeBottom" placeholder="8 / 38" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-xs text-center">
+          </div>
+          <div>
+            <label class="block text-[10px] font-semibold text-slate-600 mb-1">Calzado</label>
+            <input type="text" id="clientSizeShoes" placeholder="37" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-xs text-center">
+          </div>
+        </div>
+
+        <div class="flex gap-2 pt-3">
+          <button type="submit" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl text-xs shadow-md active-scale">
+            Guardar Cliente
+          </button>
+          <button type="button" onclick="closeClientModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-3 rounded-xl text-xs">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CREAR TANDA DE VENTAS -->
+  <div id="modalBatch" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-base font-bold text-slate-900">Crear Tanda de Ventas</h3>
+        <button onclick="closeBatchModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="formBatch" onsubmit="handleSaveBatch(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nombre de la Tanda *</label>
+          <input type="text" id="batchName" required placeholder="Ej. Tanda Especial Fin de Semana" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Seleccionar Prendas NO Vendidas *</label>
+          <p class="text-[10px] text-slate-400 mb-2">Puedes incluir prendas incluso si estuvieron en tandas anteriores.</p>
+          <div id="batchGarmentsPicker" class="max-h-56 overflow-y-auto space-y-2 border border-slate-200 rounded-xl p-2 bg-slate-50">
+            <!-- Dynamic checkboxes -->
+          </div>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button type="submit" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-xl text-xs shadow-md active-scale">
+            Crear Tanda
+          </button>
+          <button type="button" onclick="closeBatchModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-3 rounded-xl text-xs">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ASIGNAR VENTA EN VIVO DE PRENDA -->
+  <div id="modalSellGarment" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-base font-bold text-slate-900">Marcar Prenda como Vendida</h3>
+        <button onclick="closeSellGarmentModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div id="sellGarmentInfoSummary" class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
+        <!-- Rendered item info -->
+      </div>
+
+      <form id="formSellGarment" onsubmit="handleConfirmSellGarment(event)" class="space-y-4">
+        <input type="hidden" id="sellGarmentId">
+
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-bold text-slate-700 uppercase">Comprador (Cliente) *</label>
+            <button type="button" onclick="openInlineNewClientModal()" class="text-xs text-brand-600 font-bold hover:underline">
+              + Crear Cliente Nuevo
+            </button>
+          </div>
+          <input type="text" id="sellClientSearch" oninput="filterSellClients()" placeholder="Buscar cliente por nombre..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs mb-1">
+          <select id="sellClientId" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+            <option value="">-- Seleccionar Comprador --</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Estado de la Venta</label>
+          <select id="sellPaymentState" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+            <option value="Pendiente de pago">Pendiente de pago (Crea deuda al cliente)</option>
+            <option value="Vendida">Vendida (Pagada de contado al instante)</option>
+          </select>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-xs shadow-md active-scale">
+            Confirmar Venta
+          </button>
+          <button type="button" onclick="closeSellGarmentModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-3 rounded-xl text-xs">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: AGREGAR COLABORADOR -->
+  <div id="modalCollaborator" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-base font-bold text-slate-900">Nuevo Perfil de Colaborador</h3>
+        <button onclick="closeCollaboratorModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="formCollaborator" onsubmit="handleSaveCollaborator(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nombre Completo *</label>
+          <input type="text" id="collabName" required placeholder="Ej. Andrea Morales" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Rol de Acceso *</label>
+          <select id="collabRole" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+            <option value="Colaborador Ventas">Colaborador Ventas</option>
+            <option value="Colaborador Envíos">Colaborador Envíos</option>
+          </select>
+        </div>
+
+        <div class="flex gap-2 pt-3">
+          <button type="submit" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl text-xs shadow-md active-scale">
+            Guardar Perfil
+          </button>
+          <button type="button" onclick="closeCollaboratorModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-3 rounded-xl text-xs">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CUSTOM UI CONFIRMATION DIALOGUE (Replaces native confirm) -->
+  <div id="modalConfirm" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-xs rounded-2xl p-5 space-y-3 text-center">
+      <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-xl">
+        <i class="fa-solid fa-circle-question"></i>
+      </div>
+      <h4 id="confirmModalTitle" class="text-sm font-bold text-slate-900">¿Estás seguro?</h4>
+      <p id="confirmModalMessage" class="text-xs text-slate-500">Esta acción no se puede deshacer.</p>
+      <div class="flex gap-2 pt-2">
+        <button id="confirmModalOkBtn" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-bold py-2 rounded-xl text-xs">Aceptar</button>
+        <button onclick="closeConfirmModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 rounded-xl text-xs">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLOATING TOAST NOTIFICATION -->
+  <div id="toast" class="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-full text-xs font-semibold shadow-xl opacity-0 transition-opacity duration-300 pointer-events-none flex items-center gap-2">
+    <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
+    <span id="toastMessage">Operación realizada con éxito</span>
+  </div>
+
+  <!-- BOTTOM NAVIGATION BAR -->
+  <nav id="bottomNav" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-3 py-2 shadow-lg">
+    <div class="max-w-md mx-auto flex items-center justify-around">
+      <button onclick="navigateTo('viewDashboard')" class="nav-item text-brand-600 flex flex-col items-center gap-0.5 active-scale">
+        <i class="fa-solid fa-house text-lg"></i>
+        <span class="text-[10px] font-bold">Inicio</span>
+      </button>
+
+      <button onclick="navigateTo('viewGarmentCatalog')" class="nav-item text-slate-400 flex flex-col items-center gap-0.5 active-scale">
+        <i class="fa-solid fa-shirt text-lg"></i>
+        <span class="text-[10px] font-bold">Prendas</span>
+      </button>
+
+      <button onclick="navigateTo('viewBatches')" class="nav-item text-slate-400 flex flex-col items-center gap-0.5 active-scale">
+        <i class="fa-solid fa-layer-group text-lg"></i>
+        <span class="text-[10px] font-bold">Tandas</span>
+      </button>
+
+      <button onclick="navigateTo('viewClients')" class="nav-item text-slate-400 flex flex-col items-center gap-0.5 active-scale">
+        <i class="fa-solid fa-users text-lg"></i>
+        <span class="text-[10px] font-bold">Clientes</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- JAVASCRIPT APPLICATION CODE -->
+  <script>
+    // --- REALISTIC COLOMBIAN DEMO DATA ---
+    const INITIAL_DEMO_DATA = {
+      company: {
+        name: "Ropa & Estilo Popayán",
+        owner: "Carolina Restrepo",
+        address: "Calle 4 # 6-28, Centro Histórico, Popayán, Cauca",
+        email: "admin@ropaestilo.co",
+        googleClientId: ""
+      },
+      currentRole: "Administrador",
+      collaborators: [
+        { id: "col-1", name: "Luisa Fernanda", role: "Colaborador Ventas" },
+        { id: "col-2", name: "Carlos Envíos", role: "Colaborador Envíos" }
+      ],
+      clients: [
+        {
+          id: "cli-1",
+          firstName: "Mariana",
+          lastName: "Zapata",
+          whatsapp: "3004567890",
+          address: "Carrera 9 # 15-40, Popayán",
+          sizeTop: "M",
+          sizeBottom: "38",
+          sizeShoes: "37",
+          createdAt: "2026-11-01"
+        },
+        {
+          id: "cli-2",
+          firstName: "Valeria",
+          lastName: "Osorio",
+          whatsapp: "3119876543",
+          address: "Calle 5 # 10-20, Cali",
+          sizeTop: "S",
+          sizeBottom: "6",
+          sizeShoes: "36",
+          createdAt: "2026-11-05"
+        },
+        {
+          id: "cli-3",
+          firstName: "Andrea",
+          lastName: "Morales",
+          whatsapp: "3156549870",
+          address: "Av. Panamericana # 45-12, Pasto",
+          sizeTop: "L",
+          sizeBottom: "40",
+          sizeShoes: "39",
+          createdAt: "2026-11-10"
+        },
+        {
+          id: "cli-4",
+          firstName: "Sofía",
+          lastName: "Gómez",
+          whatsapp: "3201122334",
+          address: "Cra 15 # 88-10, Bogotá D.C.",
+          sizeTop: "S",
+          sizeBottom: "36",
+          sizeShoes: "37",
+          createdAt: "2026-11-15"
+        }
+      ],
+      garments: [
+        {
+          id: "gar-1",
+          name: "Chaqueta Denim Levi's Vintage",
+          createdDate: "2026-11-02",
+          condition: "Usada como nueva",
+          size: "M",
+          price: 65000,
+          saleStatus: "Vendida",
+          updatedDate: "2026-11-12",
+          clientId: "cli-1",
+          photoCollage: null
+        },
+        {
+          id: "gar-2",
+          name: "Vestido Floreado Zara Primavera",
+          createdDate: "2026-11-03",
+          condition: "Nueva sin etiqueta",
+          size: "S",
+          price: 45000,
+          saleStatus: "Pendiente de pago",
+          updatedDate: "2026-11-14",
+          clientId: "cli-2",
+          photoCollage: null
+        },
+        {
+          id: "gar-3",
+          name: "Saco Tejido Oversize Beige",
+          createdDate: "2026-11-06",
+          condition: "Usada como nueva",
+          size: "L",
+          price: 38000,
+          saleStatus: "Vendida",
+          updatedDate: "2026-11-15",
+          clientId: "cli-1",
+          photoCollage: null
+        },
+        {
+          id: "gar-4",
+          name: "Blazer Formal Negro Mango",
+          createdDate: "2026-11-08",
+          condition: "Nueva con etiqueta",
+          size: "M",
+          price: 75000,
+          saleStatus: "Pendiente de publicar",
+          updatedDate: "2026-11-08",
+          clientId: null,
+          photoCollage: null
+        },
+        {
+          id: "gar-5",
+          name: "Jeans Tiro Alto Studio F",
+          createdDate: "2026-11-10",
+          condition: "Usada con detalles",
+          size: "38",
+          price: 35000,
+          saleStatus: "Pendiente de publicar",
+          updatedDate: "2026-11-10",
+          clientId: null,
+          photoCollage: null
+        }
+      ],
+      batches: [
+        {
+          id: "bat-1",
+          name: "Tanda Especial Chaquetas y Sacos",
+          createdDate: "2026-11-12",
+          garmentIds: ["gar-1", "gar-3", "gar-4"]
+        },
+        {
+          id: "bat-2",
+          name: "Tanda Vestidos & Jeans Fin de Semana",
+          createdDate: "2026-11-14",
+          garmentIds: ["gar-2", "gar-5"]
+        }
+      ],
+      payments: [
+        {
+          id: "pay-1",
+          clientId: "cli-1",
+          amount: 103000,
+          date: "2026-11-12",
+          method: "Transferencia"
+        }
+      ],
+      shippingRequests: [
+        {
+          id: "shp-1",
+          clientId: "cli-1",
+          scheduledDate: "2026-11-15", // Overdue shipping test!
+          status: "Pendiente",
+          createdAt: "2026-11-12"
+        },
+        {
+          id: "shp-2",
+          clientId: "cli-2",
+          scheduledDate: "2026-11-25",
+          status: "Pendiente",
+          createdAt: "2026-11-14"
+        }
+      ]
+    };
+
+    // --- APP STATE & GLOBALS ---
+    let state = loadState();
+    let currentClientFilter = 'pendingShipping';
+    let currentCatalogFilter = 'ALL';
+    let loadedPhotos = [];
+
+    // --- INIT APP ---
+    window.onload = function() {
+      const todayISO = new Date().toISOString().split('T')[0];
+      document.getElementById('garmentCreatedDate').value = todayISO;
+      document.getElementById('paymentDate').value = todayISO;
+      document.getElementById('shippingDate').value = todayISO;
+
+      syncRoleSelectorUI();
+      renderAllViews();
+    };
+
+    function loadState() {
+      const saved = localStorage.getItem('ropa_usada_db_state');
+      if (saved) {
+        try { return JSON.parse(saved); } catch(e) { console.error(e); }
+      }
+      return JSON.parse(JSON.stringify(INITIAL_DEMO_DATA));
+    }
+
+    function saveState() {
+      localStorage.setItem('ropa_usada_db_state', JSON.stringify(state));
+      renderAllViews();
+    }
+
+    function promptResetDemo() {
+      showConfirmModal(
+        "¿Restablecer Datos Iniciales?",
+        "Se revertirá todo el inventario, clientes y tandas a los datos de demostración.",
+        function() {
+          state = JSON.parse(JSON.stringify(INITIAL_DEMO_DATA));
+          saveState();
+          showToast("Datos demo restaurados con éxito");
+          navigateTo('viewDashboard');
+        }
+      );
+    }
+
+    // --- ROLE & ACCESS CONTROL (RBAC) ---
+    function syncRoleSelectorUI() {
+      const select = document.getElementById('roleSelector');
+      select.innerHTML = '';
+      
+      const defaultRoles = ["Administrador", "Colaborador Ventas", "Colaborador Envíos"];
+      const customCollabRoles = (state.collaborators || []).map(c => c.name);
+      
+      const allOptions = [...defaultRoles, ...customCollabRoles];
+      const uniqueOptions = [...new Set(allOptions)];
+
+      uniqueOptions.forEach(roleName => {
+        const opt = document.createElement('option');
+        opt.value = roleName;
+        opt.innerText = roleName;
+        if (roleName === state.currentRole) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+
+    function changeRole(newRole) {
+      state.currentRole = newRole;
+      saveState();
+      applyRolePermissions();
+      showToast(`Perfil cambiado a: ${newRole}`);
+    }
+
+    function applyRolePermissions() {
+      let activeRoleType = state.currentRole;
+      
+      // Check if it's a collaborator custom name
+      const customCollab = (state.collaborators || []).find(c => c.name === state.currentRole);
+      if (customCollab) {
+        activeRoleType = customCollab.role;
+      }
+
+      document.getElementById('currentRoleBadge').innerText = state.currentRole;
+      document.getElementById('dashboardGreeting').innerText = `Bienvenido, [${state.company.name}]`;
+      document.getElementById('appHeaderTitle').innerText = state.company.name;
+
+      const adminBtn = document.getElementById('adminShortcutBtn');
+
+      if (activeRoleType === 'Colaborador Envíos') {
+        navigateTo('viewDashboard');
+        const shortcuts = document.querySelectorAll('.shortcut-btn');
+        shortcuts.forEach(btn => {
+          if (btn.innerText.includes('Solicitud Envío')) {
+            btn.style.display = 'flex';
+          } else {
+            btn.style.display = 'none';
+          }
+        });
+        if (adminBtn) adminBtn.style.display = 'none';
+        document.getElementById('recentBatchesSection').style.display = 'none';
+      } else if (activeRoleType === 'Colaborador Ventas') {
+        const shortcuts = document.querySelectorAll('.shortcut-btn');
+        shortcuts.forEach(btn => btn.style.display = 'flex');
+        if (adminBtn) adminBtn.style.display = 'none';
+        document.getElementById('recentBatchesSection').style.display = 'block';
+      } else {
+        // Admin
+        const shortcuts = document.querySelectorAll('.shortcut-btn');
+        shortcuts.forEach(btn => btn.style.display = 'flex');
+        if (adminBtn) adminBtn.style.display = 'flex';
+        document.getElementById('recentBatchesSection').style.display = 'block';
+      }
+    }
+
+    // --- NAVIGATION ---
+    function navigateTo(viewId) {
+      let activeRoleType = state.currentRole;
+      const customCollab = (state.collaborators || []).find(c => c.name === state.currentRole);
+      if (customCollab) activeRoleType = customCollab.role;
+
+      if (viewId === 'viewAdmin' && activeRoleType !== 'Administrador') {
+        showToast("Acceso denegado: Requiere perfil Administrador", "fa-solid fa-lock text-rose-400");
+        return;
+      }
+
+      if (activeRoleType === 'Colaborador Envíos' && viewId !== 'viewDashboard' && viewId !== 'viewShippingRequestForm') {
+        showToast("Perfil de Envíos: Acceso a entregas únicamente", "fa-solid fa-lock text-rose-400");
+        return;
+      }
+
+      const views = ['viewDashboard', 'viewClients', 'viewClientDetail', 'viewGarmentForm', 'viewGarmentCatalog', 'viewBatches', 'viewBatchDetail', 'viewPaymentForm', 'viewShippingRequestForm', 'viewAdmin'];
+      views.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      });
+
+      const target = document.getElementById(viewId);
+      if (target) target.classList.remove('hidden');
+
+      window.scrollTo(0, 0);
+    }
+
+    function renderAllViews() {
+      syncRoleSelectorUI();
+      applyRolePermissions();
+      renderDashboard();
+      renderClientsList();
+      renderGarmentCatalog();
+      renderBatchesList();
+      renderAdminView();
+      populateClientSelects();
+    }
+
+    // --- HELPERS ---
+    function formatCOP(num) {
+      return '$ ' + (num || 0).toLocaleString('es-CO') + ' COP';
+    }
+
+    function getClientDebt(clientId) {
+      const totalGarmentsBought = state.garments
+        .filter(g => g.clientId === clientId && g.saleStatus !== 'Pendiente de publicar')
+        .reduce((sum, g) => sum + (g.price || 0), 0);
+
+      const totalPaid = state.payments
+        .filter(p => p.clientId === clientId)
+        .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+      const debt = totalGarmentsBought - totalPaid;
+      return debt > 0 ? debt : 0;
+    }
+
+    function getClientPendingShippingCount(clientId) {
+      return state.garments.filter(g => g.clientId === clientId && g.saleStatus === 'Vendida').length;
+    }
+
+    // --- DASHBOARD RENDER ---
+    function renderDashboard() {
+      document.getElementById('dashboardGreeting').innerText = `Bienvenido, [${state.company.name}]`;
+
+      // 1. Pending Shipments List
+      const pendingShippingContainer = document.getElementById('pendingShippingList');
+      pendingShippingContainer.innerHTML = '';
+
+      const pendingRequests = state.shippingRequests.filter(r => r.status === 'Pendiente');
+      document.getElementById('pendingShippingBadgeCount').innerText = pendingRequests.length;
+
+      const todayISO = new Date().toISOString().split('T')[0];
+      pendingRequests.sort((a, b) => new Date(a.scheduledDate) - new Date(b.scheduledDate));
+
+      if (pendingRequests.length === 0) {
+        pendingShippingContainer.innerHTML = `
+          <div class="bg-white p-4 rounded-2xl border border-slate-100 text-center text-xs text-slate-400">
+            <i class="fa-solid fa-circle-check text-emerald-500 text-xl mb-1 block"></i>
+            Sin envíos pendientes en el sistema.
+          </div>
+        `;
+      } else {
+        pendingRequests.forEach(req => {
+          const client = state.clients.find(c => c.id === req.clientId) || { firstName: 'Cliente', lastName: 'Desconocido' };
+          const itemsCount = getClientPendingShippingCount(req.clientId);
+          const isOverdue = req.scheduledDate < todayISO;
+
+          const card = document.createElement('div');
+          card.className = `bg-white p-4 rounded-2xl card-shadow border transition-all ${isOverdue ? 'border-rose-500 bg-rose-50/40' : 'border-slate-100'}`;
+          
+          card.innerHTML = `
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl ${isOverdue ? 'bg-rose-600 text-white animate-bounce' : 'bg-blue-50 text-blue-600'} flex items-center justify-center font-bold text-sm">
+                  <i class="fa-solid fa-truck-fast"></i>
+                </div>
+                <div>
+                  <h4 class="text-xs font-extrabold text-slate-900">${client.firstName} ${client.lastName}</h4>
+                  <p class="text-[10px] text-slate-500">${itemsCount} prenda(s) por despachar</p>
+                </div>
+              </div>
+              <div class="text-right">
+                ${isOverdue ? 
+                  `<span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white tracking-wide uppercase">¡ENVÍO ATRASADO!</span>` 
+                  : `<span class="text-[10px] font-bold text-slate-500">Programado</span>`
+                }
+                <p class="text-xs font-black ${isOverdue ? 'text-rose-600 mt-0.5' : 'text-slate-700'}">${req.scheduledDate}</p>
+              </div>
+            </div>
+            <div class="mt-3 pt-2.5 border-t border-slate-100/80 flex items-center justify-between">
+              <span class="text-[10px] text-slate-500"><i class="fa-solid fa-location-dot text-rose-500 mr-1"></i> ${client.address || 'Sin dirección de envío'}</span>
+              <button onclick="markShippingDone('${req.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg active-scale">
+                <i class="fa-solid fa-check mr-1"></i> Despachado
+              </button>
+            </div>
+          `;
+          pendingShippingContainer.appendChild(card);
+        });
+      }
+
+      // 2. Last 5 Batches
+      const recentBatchesContainer = document.getElementById('recentBatchesList');
+      recentBatchesContainer.innerHTML = '';
+
+      const lastBatches = [...state.batches].reverse().slice(0, 5);
+
+      if (lastBatches.length === 0) {
+        recentBatchesContainer.innerHTML = `
+          <div class="bg-white p-4 rounded-2xl border border-slate-100 text-center text-xs text-slate-400">
+            No se han creado tandas aún.
+          </div>
+        `;
+      } else {
+        lastBatches.forEach(batch => {
+          const batchGarments = state.garments.filter(g => batch.garmentIds.includes(g.id));
+          const missingCount = batchGarments.filter(g => g.saleStatus === 'Pendiente de publicar').length;
+
+          const card = document.createElement('div');
+          card.className = "bg-white p-3.5 rounded-2xl card-shadow border border-slate-100 flex items-center justify-between cursor-pointer hover:border-brand-300 transition-all active-scale";
+          card.onclick = () => openBatchDetail(batch.id);
+
+          card.innerHTML = `
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-sm">
+                <i class="fa-solid fa-layer-group"></i>
+              </div>
+              <div>
+                <h4 class="text-xs font-bold text-slate-900">${batch.name}</h4>
+                <p class="text-[10px] text-slate-400">Creada: ${batch.createdDate}</p>
+              </div>
+            </div>
+            <div>
+              <span class="text-xs font-bold ${missingCount > 0 ? 'text-amber-700 bg-amber-50' : 'text-emerald-700 bg-emerald-50'} px-2.5 py-1 rounded-lg">
+                ${missingCount > 0 ? `${missingCount} faltantes` : '¡Agotada!'}
+              </span>
+            </div>
+          `;
+          recentBatchesContainer.appendChild(card);
+        });
+      }
+    }
+
+    function markShippingDone(requestId) {
+      const req = state.shippingRequests.find(r => r.id === requestId);
+      if (req) {
+        req.status = 'Completado';
+        state.garments.forEach(g => {
+          if (g.clientId === req.clientId && g.saleStatus === 'Vendida') {
+            g.saleStatus = 'Enviada';
+            g.updatedDate = new Date().toISOString().split('T')[0];
+          }
+        });
+        saveState();
+        showToast("Envío marcado como despachado");
+      }
+    }
+
+    // --- CLIENTS MODULE ---
+    function setClientFilter(filterKey) {
+      currentClientFilter = filterKey;
+      document.querySelectorAll('.client-filter-chip').forEach(btn => {
+        btn.className = "client-filter-chip bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap active-scale";
+      });
+      event.currentTarget.className = "client-filter-chip bg-brand-600 text-white px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap active-scale shadow-xs";
+      renderClientsList();
+    }
+
+    function renderClientsList() {
+      const container = document.getElementById('clientsCardsContainer');
+      container.innerHTML = '';
+
+      const query = document.getElementById('clientSearchInput').value.toLowerCase().trim();
+
+      let filtered = state.clients.filter(c => {
+        const fullName = `${c.firstName} ${c.lastName}`.toLowerCase();
+        const wa = (c.whatsapp || '').toLowerCase();
+        return fullName.includes(query) || wa.includes(query);
+      });
+
+      // Filter and Sorting Chips
+      if (currentClientFilter === 'pendingShipping') {
+        filtered.sort((a, b) => getClientPendingShippingCount(b.id) - getClientPendingShippingCount(a.id));
+      } else if (currentClientFilter === 'mostDebt') {
+        filtered.sort((a, b) => getClientDebt(b.id) - getClientDebt(a.id));
+      } else if (currentClientFilter === 'mostBought') {
+        filtered.sort((a, b) => {
+          const countA = state.garments.filter(g => g.clientId === a.id).length;
+          const countB = state.garments.filter(g => g.clientId === b.id).length;
+          return countB - countA;
+        });
+      } else if (currentClientFilter === 'noPurchases') {
+        filtered = filtered.filter(c => state.garments.filter(g => g.clientId === c.id).length === 0);
+      } else if (currentClientFilter === 'newest') {
+        filtered.sort((a, b) => new Date(b.createdAt || '2026-01-01') - new Date(a.createdAt || '2026-01-01'));
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white p-6 rounded-2xl border border-slate-100 text-center text-xs text-slate-400 space-y-2">
+            <i class="fa-solid fa-users-slash text-2xl text-slate-300"></i>
+            <p>No se encontraron clientes con el filtro actual.</p>
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(client => {
+        const debt = getClientDebt(client.id);
+        const pendingShipping = getClientPendingShippingCount(client.id);
+
+        const card = document.createElement('div');
+        card.className = "bg-white p-4 rounded-2xl card-shadow border border-slate-100 space-y-3 cursor-pointer hover:border-brand-300 transition-all active-scale";
+        card.onclick = () => openClientDetail(client.id);
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-2xl bg-brand-50 text-brand-600 font-extrabold text-sm flex items-center justify-center">
+                ${client.firstName.charAt(0)}${client.lastName.charAt(0)}
+              </div>
+              <div>
+                <h4 class="text-sm font-extrabold text-slate-900 leading-snug">${client.firstName} ${client.lastName}</h4>
+                <p class="text-xs text-slate-500"><i class="fa-brands fa-whatsapp text-emerald-500 mr-1"></i> ${client.whatsapp}</p>
+              </div>
+            </div>
+            
+            <div class="text-right">
+              ${debt > 0 ? 
+                `<span class="px-2.5 py-1 rounded-full text-xs font-black bg-rose-50 text-rose-600 border border-rose-200">Con deuda: ${formatCOP(debt)}</span>` 
+                : `<span class="px-2.5 py-1 rounded-full text-xs font-black bg-emerald-50 text-emerald-600 border border-emerald-200">Al día</span>`
+              }
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between text-[11px] pt-1 text-slate-500 border-t border-slate-50">
+            <span>Tallas: Sup <b>${client.sizeTop || '-'}</b> / Inf <b>${client.sizeBottom || '-'}</b> / Calz <b>${client.sizeShoes || '-'}</b></span>
+            ${pendingShipping > 0 ? `<span class="bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full"><i class="fa-solid fa-box mr-1"></i> ${pendingShipping} pendientes</span>` : ''}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function openClientModal(clientToEdit = null) {
+      document.getElementById('formClient').reset();
+      document.getElementById('clientId').value = '';
+
+      if (clientToEdit) {
+        document.getElementById('modalClientTitle').innerText = 'Editar Cliente';
+        document.getElementById('clientId').value = clientToEdit.id;
+        document.getElementById('clientFirstName').value = clientToEdit.firstName;
+        document.getElementById('clientLastName').value = clientToEdit.lastName;
+        document.getElementById('clientWhatsapp').value = clientToEdit.whatsapp;
+        document.getElementById('clientAddress').value = clientToEdit.address || '';
+        document.getElementById('clientSizeTop').value = clientToEdit.sizeTop || '';
+        document.getElementById('clientSizeBottom').value = clientToEdit.sizeBottom || '';
+        document.getElementById('clientSizeShoes').value = clientToEdit.sizeShoes || '';
+      } else {
+        document.getElementById('modalClientTitle').innerText = 'Registrar Cliente';
+      }
+
+      document.getElementById('modalClient').classList.remove('hidden');
+    }
+
+    function closeClientModal() {
+      document.getElementById('modalClient').classList.add('hidden');
+    }
+
+    function handleSaveClient(event) {
+      event.preventDefault();
+      const id = document.getElementById('clientId').value;
+      const firstName = document.getElementById('clientFirstName').value.trim();
+      const lastName = document.getElementById('clientLastName').value.trim();
+      const whatsapp = document.getElementById('clientWhatsapp').value.trim();
+      const address = document.getElementById('clientAddress').value.trim();
+      const sizeTop = document.getElementById('clientSizeTop').value.trim();
+      const sizeBottom = document.getElementById('clientSizeBottom').value.trim();
+      const sizeShoes = document.getElementById('clientSizeShoes').value.trim();
+
+      if (id) {
+        const client = state.clients.find(c => c.id === id);
+        if (client) {
+          Object.assign(client, { firstName, lastName, whatsapp, address, sizeTop, sizeBottom, sizeShoes });
+        }
+      } else {
+        const newClient = {
+          id: 'cli-' + Date.now(),
+          firstName,
+          lastName,
+          whatsapp,
+          address,
+          sizeTop,
+          sizeBottom,
+          sizeShoes,
+          createdAt: new Date().toISOString().split('T')[0]
+        };
+        state.clients.push(newClient);
+      }
+
+      saveState();
+      closeClientModal();
+      showToast("Cliente guardado con éxito");
+    }
+
+    function openClientDetail(clientId) {
+      const client = state.clients.find(c => c.id === clientId);
+      if (!client) return;
+
+      const debt = getClientDebt(clientId);
+      const clientGarments = state.garments.filter(g => g.clientId === clientId);
+      const totalBought = clientGarments.reduce((sum, g) => sum + g.price, 0);
+      const totalPaid = state.payments.filter(p => p.clientId === clientId).reduce((sum, p) => sum + p.amount, 0);
+
+      const container = document.getElementById('clientDetailCard');
+      container.innerHTML = `
+        <div class="flex items-start justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h3 class="text-base font-extrabold text-slate-900">${client.firstName} ${client.lastName}</h3>
+            <p class="text-xs text-emerald-600 font-bold"><i class="fa-brands fa-whatsapp"></i> ${client.whatsapp}</p>
+            <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-location-dot text-slate-400"></i> ${client.address || 'Sin dirección de envío'}</p>
+          </div>
+          <button onclick='openClientModal(${JSON.stringify(client)})' class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl font-bold">
+            <i class="fa-solid fa-pen"></i> Editar
+          </button>
+        </div>
+
+        <!-- Tallas Banner -->
+        <div class="grid grid-cols-3 gap-2 bg-slate-50 p-3 rounded-xl text-center text-xs">
+          <div><span class="text-[9px] text-slate-400 font-bold uppercase block">Talla Sup.</span><b class="text-slate-800">${client.sizeTop || 'N/A'}</b></div>
+          <div><span class="text-[9px] text-slate-400 font-bold uppercase block">Talla Inf.</span><b class="text-slate-800">${client.sizeBottom || 'N/A'}</b></div>
+          <div><span class="text-[9px] text-slate-400 font-bold uppercase block">Calzado</span><b class="text-slate-800">${client.sizeShoes || 'N/A'}</b></div>
+        </div>
+
+        <!-- Financial Summary -->
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <div class="bg-indigo-50 p-2.5 rounded-xl">
+            <span class="text-[9px] text-indigo-700 font-bold uppercase block">Total Compras</span>
+            <span class="text-xs font-black text-indigo-900">${formatCOP(totalBought)}</span>
+          </div>
+          <div class="bg-emerald-50 p-2.5 rounded-xl">
+            <span class="text-[9px] text-emerald-700 font-bold uppercase block">Total Pagado</span>
+            <span class="text-xs font-black text-emerald-900">${formatCOP(totalPaid)}</span>
+          </div>
+          <div class="${debt > 0 ? 'bg-rose-50' : 'bg-slate-50'} p-2.5 rounded-xl">
+            <span class="text-[9px] ${debt > 0 ? 'text-rose-700' : 'text-slate-500'} font-bold uppercase block">Deuda Activa</span>
+            <span class="text-xs font-black ${debt > 0 ? 'text-rose-600' : 'text-slate-700'}">${formatCOP(debt)}</span>
+          </div>
+        </div>
+
+        ${debt > 0 ? `
+          <button onclick="goToPayForClient('${client.id}')" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 active-scale shadow-sm">
+            <i class="fa-solid fa-hand-holding-dollar"></i> Registrar Pago de Deuda
+          </button>
+        ` : ''}
+
+        <!-- Client Garments History -->
+        <div class="space-y-2 pt-2 border-t border-slate-100">
+          <h4 class="text-xs font-bold text-slate-700 uppercase">Prendas Adquiridas (${clientGarments.length})</h4>
+          ${clientGarments.length === 0 ? '<p class="text-xs text-slate-400 italic">Sin compras registradas aún.</p>' : ''}
+          <div class="space-y-2">
+            ${clientGarments.map(g => `
+              <div class="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl text-xs">
+                <div>
+                  <p class="font-bold text-slate-800">${g.name}</p>
+                  <p class="text-[10px] text-slate-500">Talla: ${g.size} • ${g.condition}</p>
+                </div>
+                <div class="text-right">
+                  <p class="font-black text-slate-900">${formatCOP(g.price)}</p>
+                  <span class="text-[10px] font-bold ${g.saleStatus === 'Vendida' ? 'text-emerald-600' : g.saleStatus === 'Enviada' ? 'text-blue-600' : 'text-rose-600'}">${g.saleStatus}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+      navigateTo('viewClientDetail');
+    }
+
+    function goToPayForClient(clientId) {
+      navigateTo('viewPaymentForm');
+      document.getElementById('paymentClientId').value = clientId;
+      onPaymentClientSelect(clientId);
+    }
+
+    // --- PRODUCTS & COLLAGE MODULE ---
+    function handlePhotoUpload(event) {
+      const files = event.target.files;
+      if (!files || files.length === 0) return;
+
+      loadedPhotos = [];
+      let filesProcessed = 0;
+      const maxFiles = Math.min(files.length, 4);
+
+      for (let i = 0; i < maxFiles; i++) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = function() {
+            loadedPhotos.push(img);
+            filesProcessed++;
+            if (filesProcessed === maxFiles) {
+              drawCollageOnCanvas();
+            }
+          }
+          img.src = e.target.result;
+        }
+        reader.readAsDataURL(files[i]);
+      }
+    }
+
+    function drawCollageOnCanvas() {
+      const canvas = document.getElementById('collageCanvas');
+      const ctx = canvas.getContext('2d');
+      const placeholder = document.getElementById('collagePlaceholder');
+
+      canvas.classList.remove('hidden');
+      placeholder.classList.add('hidden');
+
+      ctx.clearRect(0, 0, 500, 500);
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(0, 0, 500, 500);
+
+      const num = loadedPhotos.length;
+      if (num === 1) {
+        ctx.drawImage(loadedPhotos[0], 0, 0, 500, 500);
+      } else if (num === 2) {
+        ctx.drawImage(loadedPhotos[0], 0, 0, 248, 500);
+        ctx.drawImage(loadedPhotos[1], 252, 0, 248, 500);
+      } else if (num === 3) {
+        ctx.drawImage(loadedPhotos[0], 0, 0, 248, 500);
+        ctx.drawImage(loadedPhotos[1], 252, 0, 248, 248);
+        ctx.drawImage(loadedPhotos[2], 252, 252, 248, 248);
+      } else if (num >= 4) {
+        ctx.drawImage(loadedPhotos[0], 0, 0, 248, 248);
+        ctx.drawImage(loadedPhotos[1], 252, 0, 248, 248);
+        ctx.drawImage(loadedPhotos[2], 0, 252, 248, 248);
+        ctx.drawImage(loadedPhotos[3], 252, 252, 248, 248);
+      }
+    }
+
+    function clearGarmentPhotos() {
+      loadedPhotos = [];
+      document.getElementById('garmentPhotoInput').value = '';
+      document.getElementById('collageCanvas').classList.add('hidden');
+      document.getElementById('collagePlaceholder').classList.remove('hidden');
+    }
+
+    function handleSaveGarment(event) {
+      event.preventDefault();
+      const id = document.getElementById('garmentId').value;
+      const name = document.getElementById('garmentName').value.trim();
+      const createdDate = document.getElementById('garmentCreatedDate').value;
+      const size = document.getElementById('garmentSize').value.trim();
+      const condition = document.getElementById('garmentCondition').value;
+      const price = parseFloat(document.getElementById('garmentPrice').value) || 0;
+      const saleStatus = document.getElementById('garmentSaleStatus').value;
+
+      let photoCollage = null;
+      if (loadedPhotos.length > 0) {
+        const canvas = document.getElementById('collageCanvas');
+        photoCollage = canvas.toDataURL('image/jpeg', 0.85);
+      }
+
+      if (id) {
+        const item = state.garments.find(g => g.id === id);
+        if (item) {
+          Object.assign(item, { name, size, condition, price, saleStatus, updatedDate: new Date().toISOString().split('T')[0] });
+          if (photoCollage) item.photoCollage = photoCollage;
+        }
+      } else {
+        const newGarment = {
+          id: 'gar-' + Date.now(),
+          name,
+          createdDate: createdDate || new Date().toISOString().split('T')[0],
+          condition: condition || 'Usada como nueva',
+          size,
+          price,
+          saleStatus: saleStatus || 'Pendiente de publicar',
+          updatedDate: new Date().toISOString().split('T')[0],
+          clientId: null,
+          photoCollage: photoCollage
+        };
+        state.garments.push(newGarment);
+      }
+
+      saveState();
+      document.getElementById('formGarment').reset();
+      clearGarmentPhotos();
+      showToast("Prenda guardada en inventario");
+      navigateTo('viewGarmentCatalog');
+    }
+
+    function setCatalogFilter(filter) {
+      currentCatalogFilter = filter;
+      document.querySelectorAll('.catalog-tab').forEach(tab => {
+        tab.className = "catalog-tab bg-white text-slate-600 px-3 py-1 rounded-lg text-xs font-medium border border-slate-200 whitespace-nowrap";
+      });
+      event.currentTarget.className = "catalog-tab bg-brand-600 text-white px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap";
+      renderGarmentCatalog();
+    }
+
+    function renderGarmentCatalog() {
+      const container = document.getElementById('garmentCatalogGrid');
+      container.innerHTML = '';
+
+      let filtered = state.garments;
+      if (currentCatalogFilter !== 'ALL') {
+        filtered = state.garments.filter(g => g.saleStatus === currentCatalogFilter);
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-2 bg-white p-6 rounded-2xl border border-slate-100 text-center text-xs text-slate-400">
+            No hay prendas con este estado.
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(garment => {
+        const card = document.createElement('div');
+        card.className = "bg-white rounded-2xl p-3 card-shadow border border-slate-100 flex flex-col justify-between space-y-2";
+
+        card.innerHTML = `
+          <div>
+            <div class="w-full aspect-square bg-slate-100 rounded-xl overflow-hidden mb-2 relative flex items-center justify-center">
+              ${garment.photoCollage ? 
+                `<img src="${garment.photoCollage}" class="w-full h-full object-cover">` 
+                : `<div class="text-slate-300 text-center p-2"><i class="fa-solid fa-shirt text-3xl"></i></div>`
+              }
+              <span class="absolute top-1.5 right-1.5 text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-slate-900/80 text-white backdrop-blur-xs">
+                ${garment.size}
+              </span>
+            </div>
+            <h4 class="text-xs font-bold text-slate-800 line-clamp-1">${garment.name}</h4>
+            <p class="text-[10px] text-slate-400">${garment.condition}</p>
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between text-xs font-black mt-1">
+              <span class="text-brand-600">${formatCOP(garment.price)}</span>
+              <span class="text-[9px] font-bold px-2 py-0.5 rounded-md ${garment.saleStatus === 'Pendiente de publicar' ? 'bg-indigo-50 text-indigo-600' : 'bg-emerald-50 text-emerald-600'}">
+                ${garment.saleStatus}
+              </span>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // --- BATCHES & LIVE WHATSAPP SELLING ---
+    function renderBatchesList() {
+      const container = document.getElementById('batchesListContainer');
+      container.innerHTML = '';
+
+      if (state.batches.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white p-6 rounded-2xl border border-slate-100 text-center text-xs text-slate-400">
+            No has creado tandas aún. Presiona "+ Nueva Tanda".
+          </div>
+        `;
+        return;
+      }
+
+      state.batches.forEach(batch => {
+        const batchGarments = state.garments.filter(g => batch.garmentIds.includes(g.id));
+        const pendingToSell = batchGarments.filter(g => g.saleStatus === 'Pendiente de publicar').length;
+
+        const card = document.createElement('div');
+        card.className = "bg-white p-4 rounded-2xl card-shadow border border-slate-100 space-y-3 cursor-pointer hover:border-brand-300 transition-all active-scale";
+        card.onclick = () => openBatchDetail(batch.id);
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div>
+              <h4 class="text-sm font-extrabold text-slate-900">${batch.name}</h4>
+              <p class="text-xs text-slate-400">Creada: ${batch.createdDate}</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-xs font-extrabold ${pendingToSell > 0 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}">
+              ${pendingToSell > 0 ? `${pendingToSell} faltantes por vender` : 'Agotada'}
+            </span>
+          </div>
+          <div class="text-[11px] text-slate-500 border-t border-slate-50 pt-2 flex items-center justify-between">
+            <span>Prendas en tanda: <b>${batch.garmentIds.length}</b></span>
+            <span class="text-brand-600 font-bold">Administrar Venta <i class="fa-solid fa-chevron-right text-[10px]"></i></span>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function openCreateBatchModal() {
+      const container = document.getElementById('batchGarmentsPicker');
+      container.innerHTML = '';
+
+      // Non-sold garments (Pendiente de publicar)
+      const availableGarments = state.garments.filter(g => g.saleStatus === 'Pendiente de publicar');
+
+      if (availableGarments.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 p-2">No hay prendas sin vender disponibles en inventario.</p>`;
+      } else {
+        availableGarments.forEach(g => {
+          const item = document.createElement('label');
+          item.className = "flex items-center gap-2.5 p-2 bg-white rounded-lg border border-slate-200 text-xs cursor-pointer";
+          item.innerHTML = `
+            <input type="checkbox" name="batchGarments" value="${g.id}" class="rounded text-brand-600 focus:ring-brand-500 w-4 h-4">
+            <div class="flex-1">
+              <span class="font-bold text-slate-800">${g.name}</span>
+              <span class="text-[10px] text-slate-400 block">Talla: ${g.size} • ${formatCOP(g.price)}</span>
+            </div>
+          `;
+          container.appendChild(item);
+        });
+      }
+
+      document.getElementById('modalBatch').classList.remove('hidden');
+    }
+
+    function closeBatchModal() {
+      document.getElementById('modalBatch').classList.add('hidden');
+    }
+
+    function handleSaveBatch(event) {
+      event.preventDefault();
+      const name = document.getElementById('batchName').value.trim();
+      const checkedBoxes = document.querySelectorAll('input[name="batchGarments"]:checked');
+      const garmentIds = Array.from(checkedBoxes).map(cb => cb.value);
+
+      if (garmentIds.length === 0) {
+        showToast("Selecciona al menos una prenda para la tanda", "fa-solid fa-triangle-exclamation text-amber-400");
+        return;
+      }
+
+      const newBatch = {
+        id: 'bat-' + Date.now(),
+        name,
+        createdDate: new Date().toISOString().split('T')[0],
+        garmentIds
+      };
+
+      state.batches.push(newBatch);
+      saveState();
+      closeBatchModal();
+      showToast("Tanda de ventas creada con éxito");
+      openBatchDetail(newBatch.id);
+    }
+
+    function openBatchDetail(batchId) {
+      const batch = state.batches.find(b => b.id === batchId);
+      if (!batch) return;
+
+      const headerContainer = document.getElementById('batchDetailHeader');
+      headerContainer.innerHTML = `
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-base font-extrabold text-slate-900">${batch.name}</h3>
+            <p class="text-xs text-slate-400">Fecha de Creación: ${batch.createdDate}</p>
+          </div>
+          <span class="text-xs font-bold bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full border border-amber-200">
+            ${batch.garmentIds.length} Prendas
+          </span>
+        </div>
+
+        <button onclick="shareBatchExpectation('${batch.id}')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 active-scale shadow-sm">
+          <i class="fa-brands fa-whatsapp text-lg"></i> Compartir Expectativa en Grupo WhatsApp (Sin Precio)
+        </button>
+      `;
+
+      const batchGarmentsList = document.getElementById('batchGarmentsList');
+      batchGarmentsList.innerHTML = '';
+
+      const garmentsInBatch = state.garments.filter(g => batch.garmentIds.includes(g.id));
+
+      garmentsInBatch.forEach(garment => {
+        const isSold = garment.saleStatus !== 'Pendiente de publicar';
+        const buyer = isSold ? state.clients.find(c => c.id === garment.clientId) : null;
+
+        const card = document.createElement('div');
+        card.className = `bg-white rounded-2xl p-4 card-shadow border ${isSold ? 'border-emerald-200 bg-emerald-50/20' : 'border-slate-100'} space-y-3`;
+
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-3">
+            <div class="w-16 h-16 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center">
+              ${garment.photoCollage ? 
+                `<img src="${garment.photoCollage}" class="w-full h-full object-cover">` 
+                : `<i class="fa-solid fa-shirt text-slate-300 text-2xl"></i>`
+              }
+            </div>
+            <div class="flex-1">
+              <h4 class="text-xs font-bold text-slate-900">${garment.name}</h4>
+              <p class="text-[10px] text-slate-500">Estado: <b>${garment.condition}</b> • Talla: <b>${garment.size}</b></p>
+              <p class="text-xs font-black text-brand-600 mt-1">${formatCOP(garment.price)}</p>
+            </div>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${isSold ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}">
+              ${garment.saleStatus}
+            </span>
+          </div>
+
+          ${isSold && buyer ? `
+            <div class="bg-emerald-50/80 p-2 rounded-xl text-[11px] text-emerald-900 font-medium flex items-center justify-between border border-emerald-100">
+              <span>Vendida a: <b>${buyer.firstName} ${buyer.lastName}</b></span>
+              <span class="text-[10px] text-emerald-700">${garment.updatedDate}</span>
+            </div>
+          ` : ''}
+
+          <div class="flex items-center gap-2 pt-1">
+            <button onclick="shareGarmentItemWhatsApp('${garment.id}')" class="flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold py-2 rounded-xl text-[11px] flex items-center justify-center gap-1 active-scale">
+              <i class="fa-brands fa-whatsapp text-sm"></i> Publicar en WhatsApp
+            </button>
+            ${!isSold ? `
+              <button onclick="openSellGarmentModal('${garment.id}')" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-bold py-2 rounded-xl text-[11px] flex items-center justify-center gap-1 active-scale shadow-xs">
+                <i class="fa-solid fa-cart-shopping"></i> Vender Prenda
+              </button>
+            ` : ''}
+          </div>
+        `;
+        batchGarmentsList.appendChild(card);
+      });
+
+      navigateTo('viewBatchDetail');
+    }
+
+    function shareBatchExpectation(batchId) {
+      const batch = state.batches.find(b => b.id === batchId);
+      if (!batch) return;
+
+      const items = state.garments.filter(g => batch.garmentIds.includes(g.id));
+      let text = `✨ *¡PRÓXIMA TANDA DE HOY: ${batch.name.toUpperCase()}!* ✨\n\n`;
+      text += `Chicas, miren estas prendas hermosas que salen ya en el grupo. ¡Vayan separando la suya! 🛍️💃\n\n`;
+
+      items.forEach((item, index) => {
+        text += `${index + 1}. *${item.name}*\n   - Estado: ${item.condition}\n   - Talla: ${item.size}\n\n`;
+      });
+
+      text += `👉 ¡Escríbanme para reservar antes de que vuelen! 📲`;
+
+      const encoded = encodeURIComponent(text);
+      window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+    }
+
+    function shareGarmentItemWhatsApp(garmentId) {
+      const garment = state.garments.find(g => g.id === garmentId);
+      if (!garment) return;
+
+      let text = `👗 *¡DISPONIBLE YA!* ${garment.name}\n\n`;
+      text += `✨ *Estado:* ${garment.condition}\n`;
+      text += `📏 *Talla:* ${garment.size}\n`;
+      text += `💰 *Precio:* ${formatCOP(garment.price)}\n\n`;
+      text += `¡Responde a este mensaje para quedártela! 🏃‍♀️💨`;
+
+      const encoded = encodeURIComponent(text);
+      window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+    }
+
+    // --- INLINE SELLING & QUICK CLIENT MODAL ---
+    function openSellGarmentModal(garmentId) {
+      const garment = state.garments.find(g => g.id === garmentId);
+      if (!garment) return;
+
+      document.getElementById('sellGarmentId').value = garment.id;
+      document.getElementById('sellGarmentInfoSummary').innerHTML = `
+        <p class="font-bold text-slate-800">${garment.name}</p>
+        <p class="text-slate-500">Talla: ${garment.size} • Precio: <b class="text-brand-600">${formatCOP(garment.price)}</b></p>
+      `;
+
+      populateSellClientsSelect();
+      document.getElementById('modalSellGarment').classList.remove('hidden');
+    }
+
+    function closeSellGarmentModal() {
+      document.getElementById('modalSellGarment').classList.add('hidden');
+    }
+
+    function populateSellClientsSelect() {
+      const select = document.getElementById('sellClientId');
+      select.innerHTML = '<option value="">-- Seleccionar Comprador --</option>';
+      const query = (document.getElementById('sellClientSearch').value || '').toLowerCase();
+
+      state.clients
+        .filter(c => `${c.firstName} ${c.lastName} ${c.whatsapp}`.toLowerCase().includes(query))
+        .forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.id;
+          opt.innerText = `${c.firstName} ${c.lastName} (${c.whatsapp})`;
+          select.appendChild(opt);
+        });
+    }
+
+    function filterSellClients() {
+      populateSellClientsSelect();
+    }
+
+    function openInlineNewClientModal() {
+      closeSellGarmentModal();
+      openClientModal();
+    }
+
+    function handleConfirmSellGarment(event) {
+      event.preventDefault();
+      const garmentId = document.getElementById('sellGarmentId').value;
+      const clientId = document.getElementById('sellClientId').value;
+      const saleState = document.getElementById('sellPaymentState').value;
+
+      if (!clientId) {
+        showToast("Selecciona un cliente comprador", "fa-solid fa-triangle-exclamation text-amber-400");
+        return;
+      }
+
+      const garment = state.garments.find(g => g.id === garmentId);
+      if (garment) {
+        garment.clientId = clientId;
+        garment.saleStatus = saleState; // 'Pendiente de pago' or 'Vendida'
+        garment.updatedDate = new Date().toISOString().split('T')[0];
+
+        if (saleState === 'Vendida') {
+          state.payments.push({
+            id: 'pay-' + Date.now(),
+            clientId: clientId,
+            amount: garment.price,
+            date: new Date().toISOString().split('T')[0],
+            method: 'Efectivo'
+          });
+        }
+      }
+
+      saveState();
+      closeSellGarmentModal();
+      showToast("Prenda vendida y asociada al cliente");
+    }
+
+    // --- PAYMENTS MODULE ---
+    function populateClientSelects() {
+      const paySelect = document.getElementById('paymentClientId');
+      const shipSelect = document.getElementById('shippingClientId');
+
+      paySelect.innerHTML = '<option value="">-- Elige un cliente --</option>';
+      shipSelect.innerHTML = '<option value="">-- Selecciona un cliente --</option>';
+
+      state.clients.forEach(c => {
+        const debt = getClientDebt(c.id);
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.innerText = `${c.firstName} ${c.lastName} ${debt > 0 ? `[Deuda: ${formatCOP(debt)}]` : '[Al día]'}`;
+        paySelect.appendChild(opt);
+
+        const pendingShippingCount = getClientPendingShippingCount(c.id);
+        if (pendingShippingCount > 0) {
+          const shipOpt = document.createElement('option');
+          shipOpt.value = c.id;
+          shipOpt.innerText = `${c.firstName} ${c.lastName} (${pendingShippingCount} prendas por despachar)`;
+          shipSelect.appendChild(shipOpt);
+        }
+      });
+    }
+
+    function filterPaymentClients() {
+      const query = document.getElementById('paymentClientSearch').value.toLowerCase();
+      const select = document.getElementById('paymentClientId');
+      select.innerHTML = '<option value="">-- Elige un cliente --</option>';
+
+      state.clients
+        .filter(c => `${c.firstName} ${c.lastName} ${c.whatsapp}`.toLowerCase().includes(query))
+        .forEach(c => {
+          const debt = getClientDebt(c.id);
+          const opt = document.createElement('option');
+          opt.value = c.id;
+          opt.innerText = `${c.firstName} ${c.lastName} ${debt > 0 ? `[Deuda: ${formatCOP(debt)}]` : '[Al día]'}`;
+          select.appendChild(opt);
+        });
+    }
+
+    function onPaymentClientSelect(clientId) {
+      const debtBox = document.getElementById('paymentClientDebtBox');
+      const debtAmountEl = document.getElementById('paymentClientDebtAmount');
+
+      if (!clientId) {
+        debtBox.classList.add('hidden');
+        return;
+      }
+
+      const debt = getClientDebt(clientId);
+      debtBox.classList.remove('hidden');
+      debtAmountEl.innerText = formatCOP(debt);
+
+      if (debt > 0) {
+        document.getElementById('paymentAmount').value = debt;
+      }
+    }
+
+    function handleSavePayment(event) {
+      event.preventDefault();
+      const clientId = document.getElementById('paymentClientId').value;
+      const amount = parseFloat(document.getElementById('paymentAmount').value) || 0;
+      const date = document.getElementById('paymentDate').value;
+      const method = document.getElementById('paymentMethod').value;
+
+      if (!clientId || amount <= 0) {
+        showToast("Selecciona cliente e ingresa un monto válido", "fa-solid fa-triangle-exclamation text-amber-400");
+        return;
+      }
+
+      state.payments.push({
+        id: 'pay-' + Date.now(),
+        clientId,
+        amount,
+        date: date || new Date().toISOString().split('T')[0],
+        method
+      });
+
+      // Update garment status if fully paid
+      const currentDebt = getClientDebt(clientId);
+      if (currentDebt <= 0) {
+        state.garments.forEach(g => {
+          if (g.clientId === clientId && g.saleStatus === 'Pendiente de pago') {
+            g.saleStatus = 'Vendida';
+            g.updatedDate = new Date().toISOString().split('T')[0];
+          }
+        });
+      }
+
+      saveState();
+      document.getElementById('formPayment').reset();
+      document.getElementById('paymentClientDebtBox').classList.add('hidden');
+      showToast("¡Pago registrado y saldo actualizado!");
+      navigateTo('viewDashboard');
+    }
+
+    // --- SHIPPING REQUEST MODULE ---
+    function onShippingClientSelect(clientId) {
+      const box = document.getElementById('shippingPaymentStatusBox');
+      if (!clientId) {
+        box.classList.add('hidden');
+        return;
+      }
+
+      const debt = getClientDebt(clientId);
+      box.classList.remove('hidden');
+
+      if (debt > 0) {
+        box.className = "rounded-xl p-3 text-xs bg-rose-50 border border-rose-200 text-rose-800 space-y-2";
+        box.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="font-extrabold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Cliente con Deuda Activa: ${formatCOP(debt)}</span>
+          </div>
+          <button type="button" onclick="goToPayForClient('${clientId}')" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-1.5 rounded-lg active-scale">
+            Ir a Registrar Pago Ahora
+          </button>
+        `;
+      } else {
+        box.className = "rounded-xl p-3 text-xs bg-emerald-50 border border-emerald-200 text-emerald-800";
+        box.innerHTML = `
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
+            <div>
+              <p class="font-bold">Estado de Pago: ¡Al día!</p>
+              <p class="text-[10px]">El cliente no tiene saldo pendiente. Puedes programar el despacho.</p>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function handleSaveShippingRequest(event) {
+      event.preventDefault();
+      const clientId = document.getElementById('shippingClientId').value;
+      const scheduledDate = document.getElementById('shippingDate').value;
+
+      if (!clientId) return;
+
+      state.shippingRequests.push({
+        id: 'shp-' + Date.now(),
+        clientId,
+        scheduledDate,
+        status: 'Pendiente',
+        createdAt: new Date().toISOString().split('T')[0]
+      });
+
+      saveState();
+      document.getElementById('formShippingRequest').reset();
+      document.getElementById('shippingPaymentStatusBox').classList.add('hidden');
+      showToast("Solicitud de envío programada");
+      navigateTo('viewDashboard');
+    }
+
+    // --- ADMINISTRATION MODULE & GOOGLE DRIVE ---
+    function renderAdminView() {
+      const totalSales = state.garments.filter(g => g.saleStatus === 'Vendida' || g.saleStatus === 'Enviada').length;
+      let totalDebt = 0;
+      state.clients.forEach(c => {
+        totalDebt += getClientDebt(c.id);
+      });
+
+      document.getElementById('kpiTotalSales').innerText = totalSales;
+      document.getElementById('kpiTotalDebt').innerText = formatCOP(totalDebt);
+
+      document.getElementById('companyName').value = state.company.name;
+      document.getElementById('companyOwner').value = state.company.owner;
+      document.getElementById('companyAddress').value = state.company.address;
+      document.getElementById('companyEmail').value = state.company.email || '';
+      document.getElementById('googleClientId').value = state.company.googleClientId || '';
+
+      const collabContainer = document.getElementById('collaboratorsList');
+      collabContainer.innerHTML = '';
+
+      if (state.collaborators.length === 0) {
+        collabContainer.innerHTML = `<p class="text-xs text-slate-400 italic">No hay colaboradores registrados.</p>`;
+      } else {
+        state.collaborators.forEach(col => {
+          const div = document.createElement('div');
+          div.className = "flex items-center justify-between bg-slate-50 p-2.5 rounded-xl text-xs border border-slate-100";
+          div.innerHTML = `
+            <div>
+              <p class="font-bold text-slate-800">${col.name}</p>
+              <span class="text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-semibold">${col.role}</span>
+            </div>
+            <button onclick="deleteCollaborator('${col.id}')" class="text-rose-500 hover:text-rose-700 p-1">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          `;
+          collabContainer.appendChild(div);
+        });
+      }
+    }
+
+    function handleSaveCompany(event) {
+      event.preventDefault();
+      state.company.name = document.getElementById('companyName').value.trim();
+      state.company.owner = document.getElementById('companyOwner').value.trim();
+      state.company.address = document.getElementById('companyAddress').value.trim();
+      state.company.email = document.getElementById('companyEmail').value.trim();
+      state.company.googleClientId = document.getElementById('googleClientId').value.trim();
+
+      saveState();
+      showToast("Datos de empresa actualizados");
+    }
+
+    function openCollaboratorModal() {
+      document.getElementById('formCollaborator').reset();
+      document.getElementById('modalCollaborator').classList.remove('hidden');
+    }
+
+    function closeCollaboratorModal() {
+      document.getElementById('modalCollaborator').classList.add('hidden');
+    }
+
+    function handleSaveCollaborator(event) {
+      event.preventDefault();
+      const name = document.getElementById('collabName').value.trim();
+      const role = document.getElementById('collabRole').value;
+
+      state.collaborators.push({
+        id: 'col-' + Date.now(),
+        name,
+        role
+      });
+
+      saveState();
+      closeCollaboratorModal();
+      showToast("Perfil de colaborador guardado");
+    }
+
+    function deleteCollaborator(id) {
+      showConfirmModal(
+        "¿Eliminar Colaborador?",
+        "Este usuario ya no aparecerá en el menú de perfiles.",
+        function() {
+          state.collaborators = state.collaborators.filter(c => c.id !== id);
+          saveState();
+          showToast("Colaborador eliminado");
+        }
+      );
+    }
+
+    // Google Drive Backup File (JSON export / import)
+    function exportBackupJSON() {
+      const backupData = JSON.stringify(state, null, 2);
+      const blob = new Blob([backupData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ropausada_db.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      showToast("Archivo ropausada_db.json descargado");
+    }
+
+    function importBackupJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const restoredState = JSON.parse(e.target.result);
+          if (restoredState && restoredState.company && restoredState.clients) {
+            state = restoredState;
+            saveState();
+            showToast("¡Información restaurada con éxito!");
+            navigateTo('viewDashboard');
+          } else {
+            showToast("Formato de respaldo JSON no válido", "fa-solid fa-triangle-exclamation text-rose-400");
+          }
+        } catch (err) {
+          showToast("Error al importar archivo JSON", "fa-solid fa-circle-xmark text-rose-500");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // --- CUSTOM CONFIRMATION MODAL (NO ALERT/CONFIRM) ---
+    let pendingConfirmAction = null;
+
+    function showConfirmModal(title, msg, onOk) {
+      document.getElementById('confirmModalTitle').innerText = title;
+      document.getElementById('confirmModalMessage').innerText = msg;
+      pendingConfirmAction = onOk;
+      
+      document.getElementById('confirmModalOkBtn').onclick = function() {
+        if (pendingConfirmAction) pendingConfirmAction();
+        closeConfirmModal();
+      };
+
+      document.getElementById('modalConfirm').classList.remove('hidden');
+    }
+
+    function closeConfirmModal() {
+      document.getElementById('modalConfirm').classList.add('hidden');
+      pendingConfirmAction = null;
+    }
+
+    // --- TOAST SYSTEM ---
+    function showToast(msg, iconClass = "fa-solid fa-circle-check text-emerald-400") {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMessage');
+      const toastIcon = document.getElementById('toastIcon');
+
+      toastMsg.innerText = msg;
+      toastIcon.className = iconClass;
+
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      toast.classList.add('opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
